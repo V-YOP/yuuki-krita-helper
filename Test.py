@@ -1,49 +1,378 @@
-import ctypes
+import hashlib
 
-# Define constants and types required for the Win32 API calls
-HWND_BROADCAST = 0xFFFF
-WM_USER = 0x400
-WM_SYSCOMMAND = 0x112
-WM_COMMAND = 0x111
-WM_CLOSE = 0x10
+from PyQt5.QtCore import QSize, QBuffer
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QToolButton
 
-# Win32 API functions
-SendMessage = ctypes.windll.user32.SendMessageW
-FindWindow = ctypes.windll.user32.FindWindowW
-Shell_NotifyIcon = ctypes.windll.shell32.Shell_NotifyIconW
+from io import BytesIO
+from krita import *
 
-class NOTIFYICONDATA(ctypes.Structure):
-    _fields_ = [
-        ('cbSize', ctypes.c_ulong),
-        ('hWnd', ctypes.c_void_p),
-        ('uID', ctypes.c_uint),
-        ('uFlags', ctypes.c_uint),
-        ('uCallbackMessage', ctypes.c_uint),
-        ('hIcon', ctypes.c_void_p),
-        ('szTip', ctypes.c_wchar * 128),
-        ('dwState', ctypes.c_ulong),
-        ('dwStateMask', ctypes.c_ulong),
-        ('szInfo', ctypes.c_wchar * 256),
-        ('uTimeout', ctypes.c_uint),
-        ('szInfoTitle', ctypes.c_wchar * 64),
-        ('dwInfoFlags', ctypes.c_ulong),
-    ]
+ICON_SET = (
+  "addblankframe",
+  "addcolor",
+  "addduplicateframe",
+  "addlayer",
+  "addlayer",
+  "addtofolder",
+  "addtofolder",
+  "animation_pause",
+  "animation_play",
+  "animation_stop",
+  "application-exit",
+  "application-pdf",
+  "applications-system",
+  "arrow-down",
+  "arrow-downleft",
+  "arrow-downright",
+  "arrow-left",
+  "arrow-right",
+  "arrow-topleft",
+  "arrow-topright",
+  "arrow-up",
+  "arrowdown",
+  "arrowdown",
+  "arrowupblr",
+  "arrowupblr",
+  "artistic_text",
+  "audio-none",
+  "audio-volume-high",
+  "audio-volume-mute",
+  "auto-key-off",
+  "auto-key-on",
+  "bookmarks",
+  "bristlebrush",
+  "brushsize-decrease",
+  "brushsize-increase",
+  "bundle_archive",
+  "calligraphy",
+  "clonebrush",
+  "cloneLayer",
+  "color-to-alpha",
+  "colorizeMask",
+  "colorsmudge",
+  "configure",
+  "curve-preset-arch",
+  "curve-preset-j",
+  "curve-preset-l",
+  "curve-preset-linear",
+  "curve-preset-linear-reverse",
+  "curve-preset-s",
+  "curve-preset-s-reverse",
+  "curve-preset-u",
+  "curvebrush",
+  "deformbrush",
+  "deletekeyframe",
+  "deletelayer",
+  "deletelayer",
+  "dialog-cancel",
+  "dialog-ok",
+  "dialog-warning",
+  "distribute-horizontal",
+  "distribute-horizontal-center",
+  "distribute-horizontal-left",
+  "distribute-horizontal-right",
+  "distribute-vertical",
+  "distribute-vertical-bottom",
+  "distribute-vertical-center",
+  "distribute-vertical-top",
+  "docker_lock_a",
+  "docker_lock_b",
+  "document-edit",
+  "document-export",
+  "document-import",
+  "document-new",
+  "document-open",
+  "document-open-recent",
+  "document-print",
+  "document-print-preview",
+  "document-save",
+  "document-save-as",
+  "download",
+  "draw-eraser",
+  "draw-text",
+  "drive-harddisk",
+  "dropframe",
+  "droppedframes",
+  "duplicatelayer",
+  "duplicatelayer",
+  "dynabrush",
+  "edit-clear",
+  "edit-copy",
+  "edit-cut",
+  "edit-delete",
+  "edit-paste",
+  "edit-redo",
+  "edit-undo",
+  "fileLayer",
+  "fillLayer",
+  "filterbrush",
+  "filterLayer",
+  "filterMask",
+  "firstframe",
+  "folder",
+  "folder-documents",
+  "folder-pictures",
+  "format-fill-color",
+  "format-list-unordered",
+  "gamut-mask-off",
+  "gamut-mask-on",
+  "geometry",
+  "gmic",
+  "go-home",
+  "gridbrush",
+  "groupClosed",
+  "groupLayer",
+  "groupOpened",
+  "hatchingbrush",
+  "im-user",
+  "infinity",
+  "interpolation_bezier",
+  "interpolation_constant",
+  "interpolation_linear",
+  "interpolation_sharp",
+  "interpolation_smooth",
+  "kde",
+  "keyframe-add",
+  "keyframe-remove",
+  "krita_draw_path",
+  "krita_tool_assistant",
+  "krita_tool_color_fill",
+  "krita_tool_color_picker",
+  "krita_tool_dyna",
+  "krita_tool_ellipse",
+  "krita_tool_freehand",
+  "krita_tool_freehandvector",
+  "krita_tool_gradient",
+  "krita_tool_grid",
+  "krita_tool_lazybrush",
+  "krita_tool_line",
+  "krita_tool_measure",
+  "krita_tool_move",
+  "krita_tool_multihand",
+  "krita_tool_polygon",
+  "krita_tool_rectangle",
+  "krita_tool_reference_images",
+  "krita_tool_smart_patch",
+  "krita_tool_transform",
+  "krita_tool_transform_recursive",
+  "landscape",
+  "lastframe",
+  "layer-locked",
+  "layer-unlocked",
+  "layer-visible-off",
+  "lightness-decrease",
+  "lightness-increase",
+  "link",
+  "list-add",
+  "locked",
+  "media-playback-start",
+  "media-playback-stop",
+  "media-record",
+  "merge-layer-below",
+  "mirror-view",
+  "nextframe",
+  "nextkeyframe",
+  "object-rotate-left",
+  "object-rotate-right",
+  "onion_skin_options",
+  "onionOff",
+  "onionOn",
+  "opacity-decrease",
+  "opacity-increase",
+  "ox16-action-object-align-horizontal-center-calligra",
+  "ox16-action-object-align-horizontal-left-calligra",
+  "ox16-action-object-align-horizontal-right-calligra",
+  "ox16-action-object-align-vertical-bottom-calligra",
+  "ox16-action-object-align-vertical-center-calligra",
+  "ox16-action-object-align-vertical-top-calligra",
+  "ox16-action-object-group-calligra",
+  "ox16-action-object-order-back-calligra",
+  "ox16-action-object-order-front-calligra",
+  "ox16-action-object-order-lower-calligra",
+  "ox16-action-object-order-raise-calligra",
+  "ox16-action-object-ungroup-calligra",
+  "paintLayer",
+  "paintop_settings_01",
+  "paintop_settings_02",
+  "pallete_librarysvg",
+  "particlebrush",
+  "passthrough-disabled",
+  "passthrough-enabled",
+  "path-break-point",
+  "path-break-segment",
+  "pathpoint-corner",
+  "pathpoint-curve",
+  "pathpoint-insert",
+  "pathpoint-join",
+  "pathpoint-line",
+  "pathpoint-merge",
+  "pathpoint-remove",
+  "pathpoint-smooth",
+  "pathpoint-symmetric",
+  "pathsegment-curve",
+  "pathsegment-line",
+  "pattern",
+  "pivot-point",
+  "pixelbrush",
+  "polyline",
+  "portrait",
+  "preferences-desktop-color",
+  "preferences-desktop-display",
+  "preferences-desktop-locale",
+  "preset-switcher",
+  "prevframe",
+  "prevkeyframe",
+  "process-stop",
+  "properties",
+  "properties",
+  "python",
+  "quickbrush",
+  "ratio",
+  "removefromfolder",
+  "removefromfolder",
+  "rotate-canvas-left",
+  "rotate-canvas-right",
+  "rotation-reset",
+  "select",
+  "select-all",
+  "select-clear",
+  "selection-mode_ants",
+  "selection-mode_invisible",
+  "selection-mode_mask",
+  "selectionMask",
+  "shape_handling",
+  "shapebrush",
+  "showColoring",
+  "showColoringOff",
+  "showMarks",
+  "showMarksOff",
+  "sketchbrush",
+  "smoothing-basic",
+  "smoothing-no",
+  "smoothing-stabilizer",
+  "smoothing-weighted",
+  "snapshot-load",
+  "split-layer",
+  "spraybrush",
+  "stroke-cap-butt",
+  "stroke-cap-round",
+  "stroke-cap-square",
+  "stroke-join-bevel",
+  "stroke-join-miter",
+  "stroke-join-round",
+  "symmetry-horizontal",
+  "symmetry-vertical",
+  "system-help",
+  "tag",
+  "tangentnormal",
+  "tool_contiguous_selection",
+  "tool_crop",
+  "tool_elliptical_selection",
+  "tool_magnetic_selection",
+  "tool_outline_selection",
+  "tool_pan",
+  "tool_path_selection",
+  "tool_perspectivegrid",
+  "tool_polygonal_selection",
+  "tool_rect_selection",
+  "tool_similar_selection",
+  "tool_zoom",
+  "tools-report-bug",
+  "tools-wizard",
+  "transform_icons_cage",
+  "transform_icons_liquify_erase",
+  "transform_icons_liquify_main",
+  "transform_icons_liquify_move",
+  "transform_icons_liquify_offset",
+  "transform_icons_liquify_resize",
+  "transform_icons_liquify_rotate",
+  "transform_icons_liquify_rotateCCW",
+  "transform_icons_main",
+  "transform_icons_mirror_x",
+  "transform_icons_mirror_y",
+  "transform_icons_penPressure",
+  "transform_icons_penPressure_locked",
+  "transform_icons_perspective",
+  "transform_icons_rotate_ccw",
+  "transform_icons_rotate_cw",
+  "transform_icons_warp",
+  "transformMask",
+  "transparency-disabled",
+  "transparency-enabled",
+  "transparencyMask",
+  "trim-to-image",
+  "unlocked",
+  "update-medium",
+  "updateColorize",
+  "vectorLayer",
+  "view-choose",
+  "view-filter",
+  "view-fullscreen",
+  "view-grid",
+  "view-list-details",
+  "view-list-text",
+  "view-preview",
+  "view-refresh",
+  "warning",
+  "wheel-light",
+  "wheel-rings",
+  "wheel-sectors",
+  "window-close",
+  "window-new",
+  "zoom-fit",
+  "zoom-horizontal",
+  "zoom-in",
+  "zoom-original",
+  "zoom-out",
+  "zoom-vertical"
+)
 
-def show_notification(title, message, icon=None):
-    nid = NOTIFYICONDATA()
-    nid.cbSize = ctypes.sizeof(NOTIFYICONDATA)
-    nid.hWnd = FindWindow(None, "Python Notification")  # Use your window title here
-    nid.uID = 1
-    nid.uFlags = 0x00000010 | 0x00000001  # NIF_MESSAGE | NIF_ICON
-    nid.uCallbackMessage = WM_USER + 20  # User-defined message for notifications
-    # nid.hIcon = ctypes.windll.shell32.ShellExecuteW(0, "open", "notepad.exe", None, None, 1)
-    nid.szTip = title[:128]
-    nid.szInfo = message[:256]
-    nid.szInfoTitle = title[:64]
-    nid.dwInfoFlags = 0x00000001  # NIIF_INFO
+def hash_icon(icon, algorithm='md5'):
+    if not isinstance(icon, QIcon):
+        raise ValueError("Input must be a QIcon object.")
 
-    Shell_NotifyIcon(0x00000000, ctypes.byref(nid))  # NIM_ADD
+    # 将 QIcon 转换为 QPixmap
+    pixmap = icon.pixmap(icon.actualSize(QSize(2000, 2000)))
 
-# Usage example
-if __name__ == "__main__":
-    show_notification("Python Notifica11tion", "Hello from Python using Win32 API!")
+    # 将 QPixmap 转换为 QImage
+    image = pixmap.toImage()
+
+    # 保存 QImage 到内存中
+    buffer = QBuffer()
+    buffer.open(QBuffer.ReadWrite)
+    image.save(buffer, "PNG")
+    data = buffer.data()
+    buffer.close()
+
+    # 使用指定的哈希算法生成哈希值
+    if algorithm.lower() == 'md5':
+        hash_obj = hashlib.md5()
+    elif algorithm.lower() == 'sha256':
+        hash_obj = hashlib.sha256()
+    else:
+        raise ValueError("Unsupported hash algorithm.")
+
+    hash_obj.update(data)
+    return hash_obj.hexdigest()
+
+
+icon_id_to_icon_name = {  }
+for iconName in ICON_SET:
+  icon = Krita.instance().icon(iconName)
+  icon_id_to_icon_name[hash_icon(icon)] = iconName
+print(len(icon_id_to_icon_name))
+
+
+qdock = next((w for w in Krita.instance().dockers() if w.objectName() == 'ToolBox'), None)
+pobj = qdock.findChild(QWidget, 'qt_scrollarea_viewport')
+mobj = next((w for w in pobj.findChildren(QWidget) if w.metaObject().className() == 'KoToolBox'), None)
+children: list[QToolButton] = mobj.findChildren(QToolButton)
+
+for child in children:
+  icon = child.icon()
+  hash = hash_icon(icon)
+  toolName = child.objectName()
+  if hash in icon_id_to_icon_name:
+    print(f"{toolName}$${icon_id_to_icon_name[hash]}")
+  else:
+    print(f"{toolName}$$NULL")

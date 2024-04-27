@@ -80,6 +80,35 @@ def find_tool_box() -> QToolButton:
             return qobj
 
 
+childrenCache: list[QToolButton] = None
+def current_tool() -> Optional[str]:
+    global childrenCache
+
+    if not childrenCache:
+        toolbox = find_tool_box()
+        if toolbox is None:
+            return None
+        childrenCache = toolbox.findChildren(QToolButton)
+
+    for child in childrenCache:
+        if child.isChecked():
+            return child.objectName()
+    return None
+
+def set_current_tool(toolName: str):
+    global childrenCache
+    if not childrenCache:
+        toolbox = find_tool_box()
+        if toolbox is None:
+            return None
+        childrenCache = toolbox.findChildren(QToolButton)
+    for child in childrenCache:
+        if child.objectName() == toolName:
+            child.click()
+            return
+    raise NameError(f"Unknown tool: {toolName}")
+
+
 def timemeter(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

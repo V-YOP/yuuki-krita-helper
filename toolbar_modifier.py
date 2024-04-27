@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QLayout, QVBoxLayout
 
 from krita import *
 from .IntervalTask import *

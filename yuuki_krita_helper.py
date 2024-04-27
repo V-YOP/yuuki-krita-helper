@@ -1,4 +1,6 @@
 import datetime
+import json
+from os import path
 from typing import List
 
 from PyQt5.QtCore import QObject, QTimer, Qt
@@ -17,6 +19,7 @@ INPUT_ECHO_ACTION_ENTRY = 'Echo'
 
 logger = Logger()
 
+fileDir = path.dirname(path.realpath(__file__))
 
 class Yuuki_krita_helper(Extension):
 
@@ -27,7 +30,7 @@ class Yuuki_krita_helper(Extension):
         self.tools = None
         self.last_call_time = None
         self.selector = None
-        self.canvasModeAction = None
+        # self.canvasModeAction = None
 
         self.tasks: list[IntervalTask] = [
             # IntervalTask(lambda e: self.knife_mode_loop(), 33),
@@ -82,12 +85,9 @@ class Yuuki_krita_helper(Extension):
     refs = []
 
     def createActions(self, window):
+        pass
         # status = window.createAction(EXTENSION_ID + "status_", "status", "tools")
-        trigger_color_selector_on_canvas_mode = window.createAction(EXTENSION_ID + "_trigger_color_selector123",
-                                                                    "Trigger color selector",
-                                                                    "tools")
-        # status.triggered.connect(lambda: self.status())
-        trigger_color_selector_on_canvas_mode.triggered.connect(lambda: self.trigger_color_selector())
+
 
         # self.toggle_knife_mode = window.createAction(EXTENSION_ID + "_toggle_knife_mode", "Toggle Knife Mode", "tools")
         # self.toggle_knife_mode.setCheckable(True)
@@ -128,24 +128,3 @@ class Yuuki_krita_helper(Extension):
         # box.__SELF__ = box
         box.open()
         # self.refs.append(box)
-
-
-    def trigger_color_selector(self):
-        logger.info(f"wtf")
-        WIDTH = 600
-        HEIGHT = 750
-        if not self.canvasModeAction:
-            self.canvasModeAction = Krita.instance().action("view_show_canvas_only")
-            self.selector = next(o for o in Krita.instance().dockers() if o.objectName() == 'ColorSelectorNg')
-
-        if not self.selector.isFloating():
-            # 疯狂设置floating可能导致krita卡死，这里定死浮动
-            self.selector.setFloating(True)
-        if self.selector.isVisible():
-            self.selector.setVisible(False)
-        else:
-            pos = QCursor().pos()
-            self.selector.setVisible(True)
-            self.selector.setGeometry(int(pos.x() - WIDTH / 2), int(pos.y() - HEIGHT / 2), WIDTH, HEIGHT)
-            self.selector.repaint()
-
