@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=yuuki_krita_helper
+X-Python-2-Compatible=false
+X-Krita-Manual=Manual.html
+Name=yuuki_krita_helper
+Comment=homemade scrip for personal use.
