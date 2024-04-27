@@ -26,7 +26,7 @@ class RemoveCanvasScrollBar(Extension):
     def loop(self):
         for canvasObj in self.canvasObjs:
             try:
-                canvasObj.isVisible() # make sure it's not GCed
+                canvasObj.isVisible() # assert it's not GCed, if so, just ignore it
             except BaseException as e:
                 continue
             if canvasObj.verticalScrollBarPolicy() != Qt.ScrollBarAlwaysOff:

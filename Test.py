@@ -1,378 +1,193 @@
-import hashlib
-
-from PyQt5.QtCore import QSize, QBuffer
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolButton
 
-from io import BytesIO
 from krita import *
 
-ICON_SET = (
-  "addblankframe",
-  "addcolor",
-  "addduplicateframe",
-  "addlayer",
-  "addlayer",
-  "addtofolder",
-  "addtofolder",
-  "animation_pause",
-  "animation_play",
-  "animation_stop",
-  "application-exit",
-  "application-pdf",
-  "applications-system",
-  "arrow-down",
-  "arrow-downleft",
-  "arrow-downright",
-  "arrow-left",
-  "arrow-right",
-  "arrow-topleft",
-  "arrow-topright",
-  "arrow-up",
-  "arrowdown",
-  "arrowdown",
-  "arrowupblr",
-  "arrowupblr",
-  "artistic_text",
-  "audio-none",
-  "audio-volume-high",
-  "audio-volume-mute",
-  "auto-key-off",
-  "auto-key-on",
-  "bookmarks",
-  "bristlebrush",
-  "brushsize-decrease",
-  "brushsize-increase",
-  "bundle_archive",
-  "calligraphy",
-  "clonebrush",
-  "cloneLayer",
-  "color-to-alpha",
-  "colorizeMask",
-  "colorsmudge",
-  "configure",
-  "curve-preset-arch",
-  "curve-preset-j",
-  "curve-preset-l",
-  "curve-preset-linear",
-  "curve-preset-linear-reverse",
-  "curve-preset-s",
-  "curve-preset-s-reverse",
-  "curve-preset-u",
-  "curvebrush",
-  "deformbrush",
-  "deletekeyframe",
-  "deletelayer",
-  "deletelayer",
-  "dialog-cancel",
-  "dialog-ok",
-  "dialog-warning",
-  "distribute-horizontal",
-  "distribute-horizontal-center",
-  "distribute-horizontal-left",
-  "distribute-horizontal-right",
-  "distribute-vertical",
-  "distribute-vertical-bottom",
-  "distribute-vertical-center",
-  "distribute-vertical-top",
-  "docker_lock_a",
-  "docker_lock_b",
-  "document-edit",
-  "document-export",
-  "document-import",
-  "document-new",
-  "document-open",
-  "document-open-recent",
-  "document-print",
-  "document-print-preview",
-  "document-save",
-  "document-save-as",
-  "download",
-  "draw-eraser",
-  "draw-text",
-  "drive-harddisk",
-  "dropframe",
-  "droppedframes",
-  "duplicatelayer",
-  "duplicatelayer",
-  "dynabrush",
-  "edit-clear",
-  "edit-copy",
-  "edit-cut",
-  "edit-delete",
-  "edit-paste",
-  "edit-redo",
-  "edit-undo",
-  "fileLayer",
-  "fillLayer",
-  "filterbrush",
-  "filterLayer",
-  "filterMask",
-  "firstframe",
-  "folder",
-  "folder-documents",
-  "folder-pictures",
-  "format-fill-color",
-  "format-list-unordered",
-  "gamut-mask-off",
-  "gamut-mask-on",
-  "geometry",
-  "gmic",
-  "go-home",
-  "gridbrush",
-  "groupClosed",
-  "groupLayer",
-  "groupOpened",
-  "hatchingbrush",
-  "im-user",
-  "infinity",
-  "interpolation_bezier",
-  "interpolation_constant",
-  "interpolation_linear",
-  "interpolation_sharp",
-  "interpolation_smooth",
-  "kde",
-  "keyframe-add",
-  "keyframe-remove",
-  "krita_draw_path",
-  "krita_tool_assistant",
-  "krita_tool_color_fill",
-  "krita_tool_color_picker",
-  "krita_tool_dyna",
-  "krita_tool_ellipse",
-  "krita_tool_freehand",
-  "krita_tool_freehandvector",
-  "krita_tool_gradient",
-  "krita_tool_grid",
-  "krita_tool_lazybrush",
-  "krita_tool_line",
-  "krita_tool_measure",
-  "krita_tool_move",
-  "krita_tool_multihand",
-  "krita_tool_polygon",
-  "krita_tool_rectangle",
-  "krita_tool_reference_images",
-  "krita_tool_smart_patch",
-  "krita_tool_transform",
-  "krita_tool_transform_recursive",
-  "landscape",
-  "lastframe",
-  "layer-locked",
-  "layer-unlocked",
-  "layer-visible-off",
-  "lightness-decrease",
-  "lightness-increase",
-  "link",
-  "list-add",
-  "locked",
-  "media-playback-start",
-  "media-playback-stop",
-  "media-record",
-  "merge-layer-below",
-  "mirror-view",
-  "nextframe",
-  "nextkeyframe",
-  "object-rotate-left",
-  "object-rotate-right",
-  "onion_skin_options",
-  "onionOff",
-  "onionOn",
-  "opacity-decrease",
-  "opacity-increase",
-  "ox16-action-object-align-horizontal-center-calligra",
-  "ox16-action-object-align-horizontal-left-calligra",
-  "ox16-action-object-align-horizontal-right-calligra",
-  "ox16-action-object-align-vertical-bottom-calligra",
-  "ox16-action-object-align-vertical-center-calligra",
-  "ox16-action-object-align-vertical-top-calligra",
-  "ox16-action-object-group-calligra",
-  "ox16-action-object-order-back-calligra",
-  "ox16-action-object-order-front-calligra",
-  "ox16-action-object-order-lower-calligra",
-  "ox16-action-object-order-raise-calligra",
-  "ox16-action-object-ungroup-calligra",
-  "paintLayer",
-  "paintop_settings_01",
-  "paintop_settings_02",
-  "pallete_librarysvg",
-  "particlebrush",
-  "passthrough-disabled",
-  "passthrough-enabled",
-  "path-break-point",
-  "path-break-segment",
-  "pathpoint-corner",
-  "pathpoint-curve",
-  "pathpoint-insert",
-  "pathpoint-join",
-  "pathpoint-line",
-  "pathpoint-merge",
-  "pathpoint-remove",
-  "pathpoint-smooth",
-  "pathpoint-symmetric",
-  "pathsegment-curve",
-  "pathsegment-line",
-  "pattern",
-  "pivot-point",
-  "pixelbrush",
-  "polyline",
-  "portrait",
-  "preferences-desktop-color",
-  "preferences-desktop-display",
-  "preferences-desktop-locale",
-  "preset-switcher",
-  "prevframe",
-  "prevkeyframe",
-  "process-stop",
-  "properties",
-  "properties",
-  "python",
-  "quickbrush",
-  "ratio",
-  "removefromfolder",
-  "removefromfolder",
-  "rotate-canvas-left",
-  "rotate-canvas-right",
-  "rotation-reset",
-  "select",
-  "select-all",
-  "select-clear",
-  "selection-mode_ants",
-  "selection-mode_invisible",
-  "selection-mode_mask",
-  "selectionMask",
-  "shape_handling",
-  "shapebrush",
-  "showColoring",
-  "showColoringOff",
-  "showMarks",
-  "showMarksOff",
-  "sketchbrush",
-  "smoothing-basic",
-  "smoothing-no",
-  "smoothing-stabilizer",
-  "smoothing-weighted",
-  "snapshot-load",
-  "split-layer",
-  "spraybrush",
-  "stroke-cap-butt",
-  "stroke-cap-round",
-  "stroke-cap-square",
-  "stroke-join-bevel",
-  "stroke-join-miter",
-  "stroke-join-round",
-  "symmetry-horizontal",
-  "symmetry-vertical",
-  "system-help",
-  "tag",
-  "tangentnormal",
-  "tool_contiguous_selection",
-  "tool_crop",
-  "tool_elliptical_selection",
-  "tool_magnetic_selection",
-  "tool_outline_selection",
-  "tool_pan",
-  "tool_path_selection",
-  "tool_perspectivegrid",
-  "tool_polygonal_selection",
-  "tool_rect_selection",
-  "tool_similar_selection",
-  "tool_zoom",
-  "tools-report-bug",
-  "tools-wizard",
-  "transform_icons_cage",
-  "transform_icons_liquify_erase",
-  "transform_icons_liquify_main",
-  "transform_icons_liquify_move",
-  "transform_icons_liquify_offset",
-  "transform_icons_liquify_resize",
-  "transform_icons_liquify_rotate",
-  "transform_icons_liquify_rotateCCW",
-  "transform_icons_main",
-  "transform_icons_mirror_x",
-  "transform_icons_mirror_y",
-  "transform_icons_penPressure",
-  "transform_icons_penPressure_locked",
-  "transform_icons_perspective",
-  "transform_icons_rotate_ccw",
-  "transform_icons_rotate_cw",
-  "transform_icons_warp",
-  "transformMask",
-  "transparency-disabled",
-  "transparency-enabled",
-  "transparencyMask",
-  "trim-to-image",
-  "unlocked",
-  "update-medium",
-  "updateColorize",
-  "vectorLayer",
-  "view-choose",
-  "view-filter",
-  "view-fullscreen",
-  "view-grid",
-  "view-list-details",
-  "view-list-text",
-  "view-preview",
-  "view-refresh",
-  "warning",
-  "wheel-light",
-  "wheel-rings",
-  "wheel-sectors",
-  "window-close",
-  "window-new",
-  "zoom-fit",
-  "zoom-horizontal",
-  "zoom-in",
-  "zoom-original",
-  "zoom-out",
-  "zoom-vertical"
-)
-
-def hash_icon(icon, algorithm='md5'):
-    if not isinstance(icon, QIcon):
-        raise ValueError("Input must be a QIcon object.")
-
-    # 将 QIcon 转换为 QPixmap
-    pixmap = icon.pixmap(icon.actualSize(QSize(2000, 2000)))
-
-    # 将 QPixmap 转换为 QImage
-    image = pixmap.toImage()
-
-    # 保存 QImage 到内存中
-    buffer = QBuffer()
-    buffer.open(QBuffer.ReadWrite)
-    image.save(buffer, "PNG")
-    data = buffer.data()
-    buffer.close()
-
-    # 使用指定的哈希算法生成哈希值
-    if algorithm.lower() == 'md5':
-        hash_obj = hashlib.md5()
-    elif algorithm.lower() == 'sha256':
-        hash_obj = hashlib.sha256()
-    else:
-        raise ValueError("Unsupported hash algorithm.")
-
-    hash_obj.update(data)
-    return hash_obj.hexdigest()
-
-
-icon_id_to_icon_name = {  }
-for iconName in ICON_SET:
-  icon = Krita.instance().icon(iconName)
-  icon_id_to_icon_name[hash_icon(icon)] = iconName
-print(len(icon_id_to_icon_name))
-
-
 qdock = next((w for w in Krita.instance().dockers() if w.objectName() == 'ToolBox'), None)
-pobj = qdock.findChild(QWidget, 'qt_scrollarea_viewport')
-mobj = next((w for w in pobj.findChildren(QWidget) if w.metaObject().className() == 'KoToolBox'), None)
-children: list[QToolButton] = mobj.findChildren(QToolButton)
+wobj: QToolButton = qdock.findChild(QToolButton,'KritaShape/KisToolBrush')
+print(wobj.shortcut().isEmpty())
 
-for child in children:
-  icon = child.icon()
-  hash = hash_icon(icon)
-  toolName = child.objectName()
-  if hash in icon_id_to_icon_name:
-    print(f"{toolName}$${icon_id_to_icon_name[hash]}")
-  else:
-    print(f"{toolName}$$NULL")
+for action in Krita.instance().actions():
+  if not action.shortcut().isEmpty():
+    print(action.objectName(), action.shortcut().toString())
+
+
+__DATA__
+
+True
+save_incremental_version Ctrl+Alt+S
+save_incremental_backup F4
+tablet_debugger Ctrl+Shift+T
+rotate_canvas_right Ctrl+]
+rotate_canvas_left Ctrl+[
+wrap_around_mode Shift+W
+level_of_detail_mode Shift+L
+softProof Ctrl+Y
+gamutCheck Ctrl+Shift+Y
+view_show_canvas_only Tab
+zoom_to_100pct Ctrl+0
+view_zoom_in Ctrl++
+view_zoom_out Ctrl+-
+toggle_fg_bg X
+reset_fg_bg D
+filter_apply_again Ctrl+F
+krita_filter_colorbalance Ctrl+B
+krita_filter_desaturate Ctrl+Shift+U
+krita_filter_hsvadjustment Ctrl+U
+krita_filter_invert Ctrl+I
+krita_filter_levels Ctrl+L
+krita_filter_perchannel Ctrl+M
+edit_cut Ctrl+X
+edit_copy Ctrl+C
+edit_paste Ctrl+V
+paste_new Ctrl+Shift+N
+paste_at Ctrl+Alt+V
+paste_as_reference Ctrl+Shift+R
+copy_merged Ctrl+Shift+C
+select_all Ctrl+A
+deselect Ctrl+Shift+A
+clear Del
+reselect Ctrl+Shift+D
+invert_selection Ctrl+Shift+I
+copy_selection_to_new_layer Ctrl+Alt+J
+cut_selection_to_new_layer Ctrl+Shift+J
+fill_selection_foreground_color Shift+Backspace
+fill_selection_background_color Backspace
+fill_selection_foreground_color_opacity Ctrl+Shift+Backspace
+fill_selection_background_color_opacity Ctrl+Backspace
+toggle_display_selection Ctrl+H
+show_snap_options_popup Shift+S
+flatten_image Ctrl+Shift+E
+merge_layer Ctrl+E
+activateNextLayer PgUp
+activatePreviousLayer PgDown
+switchToPreviouslyActiveNode ;
+duplicatelayer Ctrl+J
+create_quick_group Ctrl+G
+create_quick_clipping_group Ctrl+Shift+G
+quick_ungroup Ctrl+Alt+G
+add_new_paint_layer Ins
+add_new_shape_layer Shift+Ins
+view_grid Ctrl+Shift+'
+view_snap_to_grid Ctrl+Shift+;
+make_brush_color_lighter L
+make_brush_color_darker K
+increase_opacity O
+decrease_opacity I
+mirror_canvas M
+mirror_canvas_around_cursor Alt+M
+erase_action E
+Next Blending Mode Alt+Shift++
+Previous Blending Mode Alt+Shift+-
+Select Normal Blending Mode Alt+Shift+N
+Select Dissolve Blending Mode Alt+Shift+I
+Select Behind Blending Mode Alt+Shift+Q
+Select Clear Blending Mode Alt+Shift+R
+Select Darken Blending Mode Alt+Shift+K
+Select Multiply Blending Mode Alt+Shift+M
+Select Color Burn Blending Mode Alt+Shift+B
+Select Linear Burn Blending Mode Alt+Shift+A
+Select Lighten Blending Mode Alt+Shift+G
+Select Screen Blending Mode Alt+Shift+S
+Select Color Dodge Blending Mode Alt+Shift+D
+Select Linear Dodge Blending Mode Alt+Shift+W
+Select Overlay Blending Mode Alt+Shift+O
+Select Hard Overlay Blending Mode Alt+Shift+P
+Select Soft Light Blending Mode Alt+Shift+F
+Select Hard Light Blending Mode Alt+Shift+H
+Select Vivid Light Blending Mode Alt+Shift+V
+Select Linear Light Blending Mode Alt+Shift+J
+Select Pin Light Blending Mode Alt+Shift+Z
+Select Hard Mix Blending Mode Alt+Shift+L
+Select Difference Blending Mode Alt+Shift+E
+Select Exclusion Blending Mode Alt+Shift+X
+Select Hue Blending Mode Alt+Shift+U
+Select Saturation Blending Mode Alt+Shift+T
+Select Color Blending Mode Alt+Shift+C
+Select Luminosity Blending Mode Alt+Shift+Y
+next_favorite_preset ,
+previous_favorite_preset .
+previous_preset /
+show_brush_presets F6
+show_brush_editor F5
+imagesize Ctrl+Alt+I
+canvassize Ctrl+Alt+C
+featherselection Shift+F6
+increase_brush_size ]
+decrease_brush_size [
+undo_polygon_selection Shift+Z
+KritaSelected/KisToolColorSampler P
+KisToolTransform Ctrl+T
+movetool-move-up Up
+movetool-move-down Down
+movetool-move-left Left
+movetool-move-right Right
+movetool-move-up-more Shift+Up
+movetool-move-down-more Shift+Down
+movetool-move-left-more Shift+Left
+movetool-move-right-more Shift+Right
+KisToolSelectRectangular Ctrl+R
+pathsegment-line F
+pathsegment-curve Shift+C
+pathpoint-insert Ins
+pathpoint-remove Backspace
+pathpoint-join J
+convert-to-path P
+KritaShape/KisToolRectangle Shift+R
+object_order_front Ctrl+Shift+]
+object_order_raise Ctrl+Alt+]
+object_order_lower Ctrl+Alt+[
+object_order_back Ctrl+Shift+[
+KritaFill/KisToolGradient G
+KritaShape/KisToolEllipse Shift+J
+KritaTransform/KisToolMove T
+movetool-show-coordinates Ctrl+Alt+Shift+C
+KisToolCrop C
+KritaFill/KisToolFill F
+KisToolSelectElliptical J
+KritaShape/KisToolMultiBrush Q
+toggle_assistant Ctrl+Shift+L
+KritaShape/KisToolBrush B
+RenameCurrentLayer F2
+layer_properties F3
+remove_layer Shift+Del
+move_layer_up Ctrl+PgUp
+move_layer_down Ctrl+PgDown
+show_wg_color_selector Shift+O
+file_new Ctrl+N
+file_open Ctrl+O
+file_quit Ctrl+Q
+fullscreen Ctrl+Shift+F
+file_save Ctrl+S
+file_save_as Ctrl+Shift+S
+edit_undo Ctrl+Z
+edit_redo Ctrl+Shift+Z
+file_close_all Ctrl+Shift+W
+file_close Ctrl+W
+command_bar_open Ctrl+Return
+pykrita_yuuki_krita_helper_trigger_floating_docker `
+activate_preset_1 Ctrl+Alt+1
+activate_preset_2 Ctrl+Alt+2
+activate_preset_3 Ctrl+Alt+3
+activate_preset_4 Ctrl+Alt+4
+activate_preset_5 Ctrl+Alt+5
+activate_preset_6 Ctrl+Alt+6
+activate_preset_7 Ctrl+Alt+7
+activate_preset_8 Ctrl+Alt+8
+activate_preset_9 Ctrl+Alt+9
+activate_preset_0 Ctrl+Alt+0
+execute_script_1 Ctrl+Shift+1
+execute_script_2 Ctrl+Shift+2
+execute_script_3 Ctrl+Shift+3
+execute_script_4 Ctrl+Shift+4
+execute_script_5 Ctrl+Shift+5
+execute_script_6 Ctrl+Shift+6
+execute_script_7 Ctrl+Shift+7
+execute_script_8 Ctrl+Shift+8
+execute_script_9 Ctrl+Shift+9
+execute_script_10 Ctrl+Shift+0
+PluginDevToolsToggleOnOff F12
+show_color_selector Shift+I
+show_mypaint_shade_selector Shift+M
+show_minimal_shade_selector Shift+N
+show_color_history H
+show_common_colors U

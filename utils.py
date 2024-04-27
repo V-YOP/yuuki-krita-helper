@@ -108,6 +108,13 @@ def set_current_tool(toolName: str):
             return
     raise NameError(f"Unknown tool: {toolName}")
 
+def action_shortcuts() -> dict[str, str]:
+    res = {}
+    for action in Krita.instance().actions():
+        if not action.shortcut().isEmpty():
+            res[action.objectName()] = action.shortcut().toString().lstrip('$')
+    return res
+
 
 def timemeter(func):
     @wraps(func)

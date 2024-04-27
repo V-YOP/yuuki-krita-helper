@@ -16,4 +16,4 @@ app.addExtension(ToolbarModifier(parent=app))
 app.addExtension(RemoveCanvasScrollBar(parent=app))
 app.addExtension(FloatingDockerHelper(parent=app))
 
-# Krita.instance().addDockWidgetFactory(DockWidgetFactory("MyToolbox", DockWidgetFactoryBase.DockRight, MyToolbox))
+Krita.instance().addDockWidgetFactory(DockWidgetFactory("MyToolbox", DockWidgetFactoryBase.DockRight, MyToolbox))
