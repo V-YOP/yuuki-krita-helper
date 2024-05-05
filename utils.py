@@ -112,7 +112,7 @@ def action_shortcuts() -> dict[str, str]:
     res = {}
     for action in Krita.instance().actions():
         if not action.shortcut().isEmpty():
-            res[action.objectName()] = action.shortcut().toString().lstrip('$')
+            res[action.objectName()] = action.shortcut().toString()
     return res
 
 
@@ -197,3 +197,15 @@ class DocumentInfo:
         if uniqueId is None:
             raise Exception()
         return DocumentInfo(uniqueId, title, edit_time, create_date, update_date, document)
+
+def singleton(cls):
+    """
+    a singleton decorator
+    """
+    instances = {}
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return get_instance

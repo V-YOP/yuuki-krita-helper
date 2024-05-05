@@ -1,9 +1,11 @@
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import *
+
 from krita import *
 from .constants import *
 from .util.Logger import Logger
 from .utils import *
+
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import *
 
 TOOLBUTTON_STYLE = """
 QToolButton {
@@ -20,21 +22,21 @@ DISPLAYED_TOOLS = [
   'KritaShape/KisToolBrush',
   'KritaFill/KisToolFill',
   'KisToolSelectSimilar',
+  'KritaShape/KisToolLazyBrush', # 智能填色（取得什么名字……）
   'KisToolSelectElliptical',
   'KisToolSelectRectangular',
   'KisToolSelectPolygonal',
   'KisToolSelectOutline',
   'KisToolPolyline',
-  'KritaShape/KisToolLazyBrush', # 智能填色（取得什么名字……）
   'KritaShape/KisToolLine',
   'KritaFill/KisToolGradient',
   'ToolReferenceImages',
+  'KisToolCrop',
   'KritaShape/KisToolMeasure',
   'KisAssistantTool',
-  'KisToolCrop',
+  'SvgTextTool',
   # 'KisToolEncloseAndFill',
   # 'InteractionTool',
-  # 'SvgTextTool',
   # 'KarbonCalligraphyTool',
   # 'PathTool',
   # 'KisToolSelectContiguous',
@@ -56,7 +58,6 @@ DISPLAYED_TOOLS = [
 ]
 
 class MyToolbox(DockWidget):
-
     def __init__(self):
         super().__init__()
         self.logger = Logger()
@@ -66,8 +67,13 @@ class MyToolbox(DockWidget):
 
         item = QWidget(self)
         layout = QVBoxLayout(self)
+        self.saveFloatingLayoutAction: QAction = None
+        self.toggleFloatingDockerToolbarAction: QAction = None
         def go():
-            self.setupLayout(layout)
+            self.saveFloatingLayoutAction = Krita.instance().action('pykrita_yuuki_krita_helper_save_floating_docker')
+            self.toggleFloatingDockerToolbarAction = Krita.instance().action('pykrita_yuuki_krita_helper_toggle_floating_docker_toolbar')
+            layout.addLayout(self.toolbox_line())
+
             item.repaint()
         QTimer.singleShot(0, go)
 
@@ -91,16 +97,33 @@ class MyToolbox(DockWidget):
     #     tool = current_tool()
     #     logger.info('end: ' + tool)
 
-    def setupLayout(self, layout: QVBoxLayout):
+    def toolbox_line(self):
         hbox = QHBoxLayout()
         hbox.setAlignment(Qt.AlignLeft)
-        layout.addLayout(hbox)
         #
         # currentBtn = QPushButton(self)
         # currentBtn.setText("current")
         # currentBtn.clicked.connect(self.currentTool)
         # hbox.addWidget(currentBtn)
 
+        btn = QToolButton(self)
+        btn.setText('S')
+        btn.setToolTip('save floating layout')
+        btn.clicked.connect(self.saveFloatingLayoutAction.trigger)
+        hbox.addWidget(btn)
+
+        btn = QToolButton(self)
+        btn.setText('T')
+        btn.setToolTip('toggle floating docker title bars')
+        btn.clicked.connect(self.toggleFloatingDockerToolbarAction.trigger)
+        hbox.addWidget(btn)
+
+        ### add
+        split0 = QLabel(self)
+        split0.setText('|')
+        hbox.addWidget(split0)
+
+        ### add tools
         actionToShortCutStr = action_shortcuts()
         for toolName in DISPLAYED_TOOLS:
             iconName = TOOL_NAME_TO_ICON_NAME[toolName]
@@ -109,7 +132,7 @@ class MyToolbox(DockWidget):
             btn.setObjectName(toolName)
             btn.setCheckable(True)
             if toolName in actionToShortCutStr:
-                btn.setToolTip(f"#{toolName}: ${actionToShortCutStr[toolName]}")
+                btn.setToolTip(f"#{toolName} ({actionToShortCutStr[toolName]})")
             else:
                 btn.setToolTip(toolName)
             btn.setStyleSheet(TOOLBUTTON_STYLE)
@@ -123,6 +146,11 @@ class MyToolbox(DockWidget):
             btn.clicked.connect(onClick(toolName))
             hbox.addWidget(btn)
 
+
+        # btn = QToolButton(self)
+        # btn.setText('hello')
+        # hbox.addWidget(btn)
+        return hbox
 
 
     def canvasChanged(self, canvas):
@@ -139,5 +167,5 @@ class MyToolbox(DockWidget):
             self.lastTool = nowTool
             self.onToolChanged(nowTool)
         go()
-        QTimer.singleShot(33, self.checkCurrentToolLoop)
+        QTimer.singleShot(66, self.checkCurrentToolLoop)
 

@@ -20,7 +20,7 @@ class Krita_status_watcher(Extension):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tasks = [
-            IntervalTask.watch_state_task(self.on_eraser_mode_change, 33),
+            IntervalTask.watch_state_task(self.on_eraser_mode_change, 66),
             IntervalTask.draw_time_count_task(self.record_draw_time, RECORD_INTERVAL * 1000),
         ]
         os.makedirs(os.path.join(os.path.expanduser("~"), ".kra_history"), exist_ok=True)
