@@ -91,8 +91,11 @@ def current_tool() -> Optional[str]:
         childrenCache = toolbox.findChildren(QToolButton)
 
     for child in childrenCache:
-        if child.isChecked():
-            return child.objectName()
+        try:
+            if child.isChecked():
+                return child.objectName()
+        except BaseException as e:
+            continue
     return None
 
 def set_current_tool(toolName: str):

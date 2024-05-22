@@ -146,12 +146,37 @@ class MyToolbox(DockWidget):
             btn.clicked.connect(onClick(toolName))
             hbox.addWidget(btn)
 
+        split1 = QLabel(self)
+        split1.setText('|')
+        hbox.addWidget(split1)
+
+        edit_time_label = QLabel(self)
+        hbox.addWidget(edit_time_label)
+        edit_time_label.setText('00:00:00')
+        self.loop_update_document_edit_time(edit_time_label)
+
 
         # btn = QToolButton(self)
         # btn.setText('hello')
         # hbox.addWidget(btn)
         return hbox
 
+
+    def loop_update_document_edit_time(self, label: QLabel):
+        def biz(document: Document | None):
+            if document is None:
+                return
+            
+            edit_time = DocumentInfo.from_document(document).edit_time
+            hour = str(edit_time // 3600).rjust(2, '0')
+            minute = str((edit_time % 3600) // 60).rjust(2, '0')
+            second = str(edit_time % 60).rjust(2, '0')
+            label.setText(f"{hour}:{minute}:{second}")
+
+        def go():
+            biz(active_document())
+            QTimer.singleShot(1000, go)
+        go()
 
     def canvasChanged(self, canvas):
         pass

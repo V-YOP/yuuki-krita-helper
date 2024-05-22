@@ -2,7 +2,7 @@
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
         <text>yuuki_krita_helper</text>
-        <Action name="pykrita_yuuki_krita_helper_trigger_floating_docker">
+        <Action name="pykrita_yuuki_krita_helper_trigger_floating_docker11">
             <icon/>
             <text>Open Resources Folder</text>
             <whatsThis>Opens a file browser at the location Krita saves resources such as brushes to.</whatsThis>
@@ -17,10 +17,10 @@
     </Actions>
 </ActionCollection>
 
-<!-----
+<!--
     user guide:
         https://docs.krita.org/en/user_manual/python_scripting/krita_python_plugin_howto.html
     save this file in below location:
         Windows: C:\Users\%USERNAME%\AppData\Roaming\krita\actions\
         Linux: $HOME/.local/share/krita/actions/
------>
+-->

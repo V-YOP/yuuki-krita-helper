@@ -47,7 +47,7 @@ class FloatingDockerHelper(Extension):
         QTimer.singleShot(0, lambda: self.trigger_floating_docker(False))
 
         toggle_floating_docker_toolbar = window.createAction(EXTENSION_ID + "_toggle_floating_docker_toolbar",
-                                                            "Save floating docker Info",
+                                                            "toggle_floating_docker",
                                                             "tools")
         toggle_floating_docker_toolbar.triggered.connect(lambda: self.toggle_floating_docker_toolbar())
 
