@@ -1,3 +1,4 @@
+SKETCH_DIR = r'D:\DESKTOP\ART\KRA'
 TOOL_NAME_TO_ICON_NAME = {
     "KisToolEncloseAndFill": "warning", # not found at https://scripting.krita.org/icon-library
     "KritaSelected/KisToolColorSampler": "warning",  # not found at https://scripting.krita.org/icon-library

@@ -14,6 +14,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+OVERVIEW_WIDTH = 700
+OVERVIEW_HEIGHT = 720
+
 EXTENSION_ID = 'view_helper_extension'
 
 class ViewHelperExtension(Extension):
@@ -44,7 +47,7 @@ class ViewHelperExtension(Extension):
         self.minimize_all_action: QAction = None
         self.frameless_view_action: QAction = None
         pass
-
+    
     def setup(self):
         # def go(view: View):
         #     if not self.frameless_view_action:
@@ -118,8 +121,8 @@ class ViewHelperExtension(Extension):
             qview.setWindowFlag(Qt.WindowStaysOnTopHint, True)
             qview.showNormal()
             geo = qview.geometry()
-            geo.setWidth(400)
-            geo.setHeight(420)
+            geo.setWidth(OVERVIEW_WIDTH)
+            geo.setHeight(OVERVIEW_HEIGHT)
             qview.setGeometry(geo)
             
         QTimer.singleShot(0, go)

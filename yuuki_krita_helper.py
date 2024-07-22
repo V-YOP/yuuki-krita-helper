@@ -2,10 +2,13 @@ import datetime
 import json
 from os import path
 from typing import List
-
+import re
+import glob
 from PyQt5.QtCore import QObject, QTimer, Qt
 from PyQt5.QtWidgets import QToolButton, QMenu, QMessageBox, QAction, QWidget, QAbstractScrollArea
 from PyQt5.QtGui import QKeySequence, QCursor
+
+from .constants import SKETCH_DIR
 
 from .IntervalTask import *
 from .HotReloadExtension import HotReloadExtension
@@ -37,25 +40,25 @@ class Yuuki_krita_helper(Extension):
             # IntervalTask(lambda e: self.removeScrollBar(), 33)
         ]
 
-    def removeScrollBar(self):
-        if Krita.instance().activeDocument() is None:
-            return
-        activeWindow = Krita.instance().activeWindow()
-        if activeWindow is None:
-            return
-        qwin = activeWindow.qwindow()
-        pobj = qwin.findChild(QWidget, 'view_0')
-        if pobj is None:
-            return
-        mobj: QAbstractScrollArea = next(
-            (w for w in pobj.findChildren(QAbstractScrollArea) if w.metaObject().className() == 'KisCanvasController'),
-            None)
-        if mobj is None:
-            return
-        def go():
-            mobj.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            mobj.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        go()
+    # def removeScrollBar(self):
+    #     if Krita.instance().activeDocument() is None:
+    #         return
+    #     activeWindow = Krita.instance().activeWindow()
+    #     if activeWindow is None:
+    #         return
+    #     qwin = activeWindow.qwindow()
+    #     pobj = qwin.findChild(QWidget, 'view_0')
+    #     if pobj is None:
+    #         return
+    #     mobj: QAbstractScrollArea = next(
+    #         (w for w in pobj.findChildren(QAbstractScrollArea) if w.metaObject().className() == 'KisCanvasController'),
+    #         None)
+    #     if mobj is None:
+    #         return
+    #     def go():
+    #         mobj.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    #         mobj.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    #     go()
         # QTimer.singleShot(0, go)
 
 
@@ -63,7 +66,7 @@ class Yuuki_krita_helper(Extension):
         for task in self.tasks:
             task.start(self)
 
-    # TODO 重做时如何处理gc
+    # TODO 重做时如何处理 gc
     # @timemeter
     def knife_mode_loop(self):
         try:
@@ -84,10 +87,44 @@ class Yuuki_krita_helper(Extension):
 
     refs = []
 
-    def createActions(self, window):
-        pass
-        # status = window.createAction(EXTENSION_ID + "status_", "status", "tools")
+    def blending_mode_test(self):
+        def toRGB(pixel, opacity = 1):
+            r = ord(pixel[0])
+            g = ord(pixel[1])
+            b = ord(pixel[2])
+            a = ord(pixel[3]) * opacity
+            return list(map(lambda x: round(x / 255, 2), [r, g, b, a]))
+             
+        doc = Krita.instance().activeDocument()
+        merge = toRGB(doc.pixelData(0, 0, 1, 1))
+        bottom = toRGB(doc.topLevelNodes()[0].pixelData(0,0,1,1), doc.topLevelNodes()[0].opacity() / 255)
+        top = toRGB(doc.topLevelNodes()[1].pixelData(0,0,1,1),  doc.topLevelNodes()[1].opacity() / 255)
+        mode = doc.topLevelNodes()[1].blendingMode()
+        floating_message(f"{mode=}, {merge=}, {bottom=}, {top=}", priority=0, timeout=5000)
+        
 
+    def create_sketch(self, width: int, height: int):
+        today_str = datetime.now().strftime('%y%m%d')
+        files = glob.glob(path.join(SKETCH_DIR, f"[[]{today_str}[]]SKETCH_*.kra"))
+        file_ids = [re.match(rf"\[{today_str}\]SKETCH_(.*?).kra", path.basename(file)).group(1) for file in files]
+
+        def get_target_id(current_id: str):
+            if current_id not in file_ids:
+                return current_id
+            return get_target_id(str(int(current_id) + 1))
+        
+        target_path = path.join(SKETCH_DIR, f"[{today_str}]SKETCH_{get_target_id(str(len(files)))}.kra")
+        d = Krita.instance().createDocument(width, height, '', 'RGBA', 'U8', '', 72.0)
+        Krita.instance().activeWindow().addView(d)
+        d.saveAs(target_path)
+
+    def createActions(self, window):
+        self.create_sketch_action = window.createAction(EXTENSION_ID + "_create_sketch", "Create Sketch", "tools")
+        self.create_sketch_action.triggered.connect(lambda: self.create_sketch(3000, 2000))
+
+        
+        self.blending_mode_test_action = window.createAction(EXTENSION_ID + "_blending_mode_test", "Blending Mode Test", "tools")
+        self.blending_mode_test_action.triggered.connect(lambda: self.blending_mode_test())
 
         # self.toggle_knife_mode = window.createAction(EXTENSION_ID + "_toggle_knife_mode", "Toggle Knife Mode", "tools")
         # self.toggle_knife_mode.setCheckable(True)

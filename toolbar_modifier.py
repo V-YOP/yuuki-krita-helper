@@ -48,10 +48,10 @@ DISPLAYED_TOOLS = {
 class ToolbarModifier(Extension):
     def __init__(self, parent):
         super().__init__(parent)
-        self.tasks: list[IntervalTask] = [
-            # IntervalTask(lambda e: self.knife_mode_loop(), 33),
-            IntervalTask(lambda e: self.modify_toolbar(), 1000)
-        ]
+        # self.tasks: list[IntervalTask] = [
+        #     # IntervalTask(lambda e: self.knife_mode_loop(), 33),
+        #     IntervalTask(lambda e: self.modify_toolbar(), 1000)
+        # ]
 
     def modify_toolbar(self):
         try:
@@ -66,8 +66,9 @@ class ToolbarModifier(Extension):
             pass
 
     def setup(self):
-        for task in self.tasks:
-            task.start(self)
+        # for task in self.tasks:
+        #     task.start(self)
+        pass
 
     def createActions(self, window):
         pass

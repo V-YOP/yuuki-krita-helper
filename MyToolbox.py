@@ -7,6 +7,7 @@ from .utils import *
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import *
 
+
 TOOLBUTTON_STYLE = """
 QToolButton {
     width: 40px;
